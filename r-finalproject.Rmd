@@ -1,0 +1,146 @@
+---
+title: "Streaming Spotify TOP 100"
+author: "Ditya Anggraheni Rahayu"
+date: "1/21/2022"
+output: html_document
+---
+
+## Latar Belakang Dataset
+Spotify adalah salah satu platform untuk streaming musik dan podcast. Di notebook ini, saya akan melakukan analisis lagu-lagu streaming Spotify top 100 untuk menemukan pola yang menarik di antara lagu-lagu top tersebut.
+
+## Import Library
+```{r}
+library(tidyverse) 
+library(skimr)
+library(DataExplorer)
+library(readr)
+library(data.table)
+library(Hmisc)
+```
+
+## Mengakses dataset
+```{r}
+df <- read.csv("D:/KULIAH/Sem 5/PSDS/Top 100 most Streamed.csv")
+head(df, n = 5)
+```
+
+## Memahami dataset
+Variabel-variabel yang terdapat pada dataset ini adalah sebagai berikut:
+
+1. Title = judul lagu
+2. Artist = penyanyi
+3. Top genre = genre lagu
+4. Year = tahun dirilis
+5. Beats per minute = jumlah beat/ketukan dalam satu menit
+6. Energy = kemampuan suatu musik untuk meningkatkan emosi pendengarnya
+7. Danceability = kecocokan dalam sebuah trek musik untuk menari berdarkan unsur musik
+8. Loudness = keseluruhan kenyaringan suatu lagu dalam desibel(dB)
+9. Liveness = Mendeteksi keberadaan audiens dalam rekaman
+10. Valance =  indikasi jenis emosi
+11. Length = durasi lagu
+12. Acousticness = ukuran kepercayaan yang menunjukan apakah trek tersebut akustik
+13. Speechiness = mendeteksi kehadiran kata-kata yang diucapkan dalam sebuah trek pada musik
+14. Popularity = tingkat popularitas lagu
+
+## Pertanyaan Analisis
+
+1. Banyak lagu yang dimiliki artis pada top 100
+2. Lagu Terpopuler Berdasarkan Tahun rilis
+3. Genre Paling mendominasi di Top 100
+4. Lagu Dengan durasi terlama berdasarkan genre
+
+## Exploratory Data Analysis - EDA
+### Dimensi data
+```{r}
+dim(df)
+```
+
+Artinya kita memiliki data dengan 14 kolom dan 100 baris
+
+### Variabel pada dataset
+```{r}
+names(df) #variabel
+str(df)   #struktur dataset
+```
+
+Kita dapat mengetahui tipe-tipe data masing-masing variabel dan nama-nama variabel dalam dataset. Terdapat dua buah jenis data pada dataset tersebut yaitu:
+factor (title, artist, dan top genre)
+Integer (year, beats per minute, energy, dancebility, loudness, liveness, valance, length, accousticness, speechiness, dan popularity)
+
+### Ringkasan data
+```{r}
+skim(df)
+```
+
+### Deskripsi data
+```{r}
+describe(df)
+```
+
+### Mengecek missing data
+```{r}
+plot_missing(df)
+```
+
+Hasil visualisasi dari fungsi *plot missing* pada dataset, terlihat bahwa tidak terdapat missing value pada setiap kolomnya.
+
+### Mengecek Outlier
+```{r}
+num_cols <- unlist(lapply(df, is.numeric)) #Memilih kolom bertipe numerik
+df_num <- df[,num_cols]  
+boxplot(df_num)
+```
+
+### Melihat Korelasi Data
+```{r}
+plot_correlation(df_num)
+```
+
+### Plot Distribusi Data Numerik
+```{r}
+plot_histogram(df)
+```
+
+### Plot Distribusi Data Kategorikal
+```{r}
+plot_bar(df)
+```
+
+## Menjawab Pertanyaan
+### 1. Banyak lagu yang dimiliki artis pada top 100
+```{r}
+nama <- df %>%
+  group_by(artist) %>%
+  dplyr::summarize(Total=n())
+print(nama)
+```
+
+
+### 2. Lagu Terpopuler Berdasarkan Tahun rilis
+```{r}
+max <- df %>%
+  group_by(year) %>%
+  summarise(popularity = max(popularity))
+
+df %>%
+  right_join(max, by = c("year", "popularity")) %>%
+  select(artist, title,year,popularity)
+```
+
+### 3. Genre Paling mendominasi di Top 100
+```{r}
+plot_bar(df$top.genre)
+```
+
+Genre Paling mendominasi di Top 100 adalah dance pop
+
+### 4. Lagu Dengan durasi terlama berdasarkan genre
+```{r}
+durasi <- df %>%
+  group_by(top.genre) %>%
+  summarise(length = max(length))
+
+df %>%
+  right_join(durasi, by = c("top.genre", "length")) %>%
+  select(artist,title,top.genre, length)
+```
